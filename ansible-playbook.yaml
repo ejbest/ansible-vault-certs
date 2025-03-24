@@ -1,0 +1,79 @@
+- name: Fetch secrets from HashiCorp Vault using cert and AppRole auth
+  hosts: localhost
+  gather_facts: no
+  vars:
+    vault_url: "https://localhost:8201"
+    vault_secret_path: "mytest/data/mytest"
+
+    # Cert Auth Credentials
+    client_cert: "tls/tls-cert.pem"
+    client_key: "tls/tls-key.pem"
+    ca_cert: "tls/tls-ca.pem"
+
+    # AppRole Auth Credentials (Replace with actual values)
+    approle_role_id: "b8501061-a3aa-8ac7-77f0-aeacc026d55c"
+    approle_secret_id: "2fa4e9d4-d28b-24fb-bba0-b26f18d40894"
+
+  tasks:
+    # Cert Authentication
+    - name: Authenticate with Vault using Certificate Auth
+      uri:
+        url: "{{ vault_url }}/v1/auth/cert/login"
+        method: POST
+        client_cert: "{{ client_cert }}"
+        client_key: "{{ client_key }}"
+        validate_certs: no
+        return_content: yes
+      register: vault_auth_response_cert
+
+    - name: Extract Vault Token (Cert Auth)
+      set_fact:
+        vault_token_cert: "{{ vault_auth_response_cert.json.auth.client_token }}"
+
+    - name: Read secret from Vault (Cert Auth)
+      uri:
+        url: "{{ vault_url }}/v1/{{ vault_secret_path }}"
+        method: GET
+        headers:
+          X-Vault-Token: "{{ vault_token_cert }}"
+        client_cert: "{{ client_cert }}"
+        client_key: "{{ client_key }}"
+        validate_certs: no
+        return_content: yes
+      register: vault_secret_cert
+
+    - name: Extract and Display Secret (Cert Auth)
+      debug:
+        msg: "Cert Auth Secret: {{ vault_secret_cert.json.data.data }}"
+
+    # --------------------- AppRole Authentication ---------------------
+
+    - name: Authenticate with Vault using AppRole Auth
+      uri:
+        url: "{{ vault_url }}/v1/auth/approle/login"
+        method: POST
+        body_format: json
+        body:
+          role_id: "{{ approle_role_id }}"
+          secret_id: "{{ approle_secret_id }}"
+        validate_certs: no
+        return_content: yes
+      register: vault_auth_response_approle
+
+    - name: Extract Vault Token (AppRole Auth)
+      set_fact:
+        vault_token_approle: "{{ vault_auth_response_approle.json.auth.client_token }}"
+
+    - name: Read secret from Vault (AppRole Auth)
+      uri:
+        url: "{{ vault_url }}/v1/{{ vault_secret_path }}"
+        method: GET
+        headers:
+          X-Vault-Token: "{{ vault_token_approle }}"
+        validate_certs: no
+        return_content: yes
+      register: vault_secret_approle
+
+    - name: Extract and Display Secret (AppRole Auth)
+      debug:
+        msg: "AppRole Auth Secret: {{ vault_secret_approle.json.data.data }}"
