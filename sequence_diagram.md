@@ -4,8 +4,14 @@ This diagram illustrates the Ansible login process.
 
 ```mermaid
 sequenceDiagram
+    participant CertLoad
+    participant Role(SeeSam)
     participant Ansible
     participant Script
+    Ansible->>Script: AuthenticatesVault
+    Note over Ansible,Script: Authenticated
+
+
     box "Certificate"
     end
     alt Certificate
