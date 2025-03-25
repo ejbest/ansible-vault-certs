@@ -6,34 +6,42 @@ export VAULT_ADDR="https://localhost:8201"
 export VAULT_SKIP_VERIFY=true  # Skip SSL verification if using self-signed certs
 
 VAULT_SECRET_PATH="mytest/mytest"
+APPROLE_NAME="ansible-approle"  # Update this to match your AppRole name
 
 echo "--------------------------------"
-echo "  Reading Secret from Vault"
+echo "  Authenticating to Vault using Certificate Authentication"
 echo "--------------------------------"
 
-### 1️⃣ Certificate Authentication
-echo "Logging into Vault using Certificate Authentication..."
-vault login -method=cert \
+# Login using Certificate Authentication and extract the Vault token
+VAULT_TOKEN=$(vault login -method=cert \
     -client-cert=tls/tls-cert.pem \
-    -client-key=tls/tls-key.pem
+    -client-key=tls/tls-key.pem \
+    -format=json | jq -r '.auth.client_token')
 
-echo "Fetching secret using Cert Auth..."
-vault kv get $VAULT_SECRET_PATH
+export VAULT_TOKEN
+echo "Vault login successful."
 
 echo "--------------------------------"
+echo "  Fetching AppRole Credentials"
+echo "--------------------------------"
 
-### 2️⃣ AppRole Authentication
-# Replace with actual Role ID and Secret ID
-ROLE_ID="b8501061-a3aa-8ac7-77f0-aeacc026d55c"
-SECRET_ID="2fa4e9d4-d28b-24fb-bba0-b26f18d40894"
+# Retrieve AppRole Role ID dynamically
+ROLE_ID=$(vault read -field=role_id auth/approle/role/$APPROLE_NAME/role-id)
 
-echo "Logging into Vault using AppRole..."
-VAULT_TOKEN=$(vault write -field=token auth/approle/login role_id="$ROLE_ID" secret_id="$SECRET_ID")
+# Generate a new Secret ID dynamically
+SECRET_ID=$(vault write -f -field=secret_id auth/approle/role/$APPROLE_NAME/secret-id)
 
-# Export token for session use
-export VAULT_TOKEN
+echo "--------------------------------"
+echo "  Fetching Secret from Vault using AppRole"
+echo "--------------------------------"
 
-echo "Fetching secret using AppRole Auth..."
+# Authenticate using AppRole and retrieve a new token
+APPROLE_TOKEN=$(vault write -field=token auth/approle/login role_id="$ROLE_ID" secret_id="$SECRET_ID")
+
+# Use the new token for Vault operations
+export VAULT_TOKEN=$APPROLE_TOKEN
+
+# Fetch secret
 vault kv get $VAULT_SECRET_PATH
 
 echo "--------------------------------"

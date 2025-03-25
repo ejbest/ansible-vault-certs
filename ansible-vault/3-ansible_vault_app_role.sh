@@ -48,4 +48,12 @@ vault write auth/approle/role/$ROLE_NAME \
 
 echo "AppRole created."
 
+# Retrieve the Role ID
+ROLE_ID=$(vault read -field=role_id auth/approle/role/$ROLE_NAME/role-id)
+echo "Retrieved Role ID: $ROLE_ID"
+
+# Generate and retrieve the Secret ID
+SECRET_ID=$(vault write -f -field=secret_id auth/approle/role/$ROLE_NAME/secret-id)
+echo "Retrieved Secret ID: $SECRET_ID"
+
 echo "AppRole authentication setup and configuration completed successfully."

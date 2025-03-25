@@ -33,29 +33,13 @@ fi
 # Create a Vault policy for Ansible
 echo "Creating Vault policy for Ansible..."
 cat <<EOF > ansible-policy.hcl
-# Existing KV2 permissions (unchanged)
 path "mytest/data/*" {
     capabilities = ["read", "list"]
 }
+
 path "mytest/metadata/*" {
     capabilities = ["read", "list"]
 }
-
-# 🔹 Allow retrieving AppRole Role ID
-path "auth/approle/role/ansible-approle/role-id" {
-    capabilities = ["read"]
-}
-
-# 🔹 Allow generating new Secret ID
-path "auth/approle/role/ansible-approle/secret-id" {
-    capabilities = ["create", "update"]
-}
-
-# 🔹 Allow logging in with AppRole
-path "auth/approle/login" {
-    capabilities = ["create", "update"]
-}
-
 EOF
 
 vault policy write ansible ansible-policy.hcl
