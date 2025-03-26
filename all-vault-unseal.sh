@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# Set the Vault token
-# Must already be setup with key vars 
+set -x
+source ~/.bash_profile
 
-# Array of Vault addresses to check
-VAULT_ADDRESSES=(
-    "https://127.0.0.1"	    #one
-    "https://127.0.0.1"		#two
-    "https://127.0.0.1"     #three
-)
+# Vault token is now sourced from .bash_profile
+export VAULT_TOKEN="$VAULT_TOKEN"
 
-UNSEAL_KEYS_FILE="/home/wsluser/.ssh/unseal_keys.txt"
+# Vault addresses sourced from .bash_profile
+VAULT_ADDRESSES=("${VAULT_ADDRESSES[@]}")
+
+# Unseal keys sourced from .bash_profile
+UNSEAL_KEYS=("${UNSEAL_KEYS[@]}")
 
 # Function to check Vault status
 check_vault_status() {
@@ -19,18 +19,15 @@ check_vault_status() {
 
 # Function to check if Vault is sealed
 is_vault_sealed() {
-    check_vault_status | grep -q "1Sealed\s*true"
+    check_vault_status | grep -q "Sealed\s*true"
 }
 
 # Function to unseal Vault
 unseal_vault() {
-    # Read unseal keys from the file
-    UNSEAL_KEYS=$(cat "$UNSEAL_KEYS_FILE")
-
     # Unseal each Vault address using the stored keys
     for addr in "${VAULT_ADDRESSES[@]}"; do
         export VAULT_ADDR="$addr"  # Set the VAULT_ADDR for the current iteration
-        for key in $UNSEAL_KEYS; do
+        for key in "${UNSEAL_KEYS[@]}"; do
             vault operator unseal "$key"
         done
 
@@ -55,4 +52,3 @@ for addr in "${VAULT_ADDRESSES[@]}"; do
         echo "Vault is already unsealed."
     fi
 done
-
