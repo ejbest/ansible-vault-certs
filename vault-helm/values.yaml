@@ -59,7 +59,7 @@ server:
   enterpriseLicense:
     # The name of the Kubernetes secret that holds the enterprise license. The
     # secret must be in the same namespace that Vault is installed into.
-    secretName: ""
+    secretName: "license"
     # The key within the Kubernetes secret that holds the enterprise license.
     secretKey: "license"
 
