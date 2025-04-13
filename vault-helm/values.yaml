@@ -576,7 +576,7 @@ server:
       ui = true
 
       listener "tcp" {
-        tls_disable = 1
+        tls_disable = 0
         address = "[::]:8200"
         cluster_address = "[::]:8201"
         # Enable unauthenticated metrics access (necessary for Prometheus Operator)
@@ -642,13 +642,16 @@ server:
         ui = true
 
         listener "tcp" {
-          tls_disable = 1
+          tls_disable = 0
           address = "[::]:8200"
           cluster_address = "[::]:8201"
-          # Enable unauthenticated metrics access (necessary for Prometheus Operator)
-          #telemetry {
-          #  unauthenticated_metrics_access = "true"
-          #}
+          tls_cert_file = "/etc/pki/tls/certs/vault_ssl_bundle"
+          tls_key_file = "/etc/pki/tls/certs/vault_ssl_key"
+          telemetry:
+            unauthenticated_metrics_access: true 
+          tls_disable_client_certs:
+            azure: "true"
+            vmc2: "true"
         }
 
         storage "raft" {
@@ -669,7 +672,7 @@ server:
       ui = true
 
       listener "tcp" {
-        tls_disable = 1
+        tls_disable = 0
         address = "[::]:8200"
         cluster_address = "[::]:8201"
       }
