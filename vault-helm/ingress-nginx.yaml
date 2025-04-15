@@ -1,0 +1,24 @@
+controller:
+  updateStrategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxUnavailable: 1
+  hostNetwork: true
+  hostPort:
+    enabled: true
+    ports:
+      http: 80
+      https: 443
+  terminationGracePeriodSeconds: 0
+  service:
+    type: "NodePort"
+  watchIngressWithoutClass: true
+
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Equal"
+      effect: "NoSchedule"
+  publishService:
+    enabled: false
+  extraArgs:
+    publish-status-address: "localhost"
