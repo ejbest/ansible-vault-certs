@@ -1,0 +1,13 @@
+hostNetwork: true
+service:
+  type: nodePort
+  ports:
+    http: 80
+    https: 443
+
+  nodePorts:
+    http: 80
+    https: 443
+
+networkPolicy:
+  enabled: false
